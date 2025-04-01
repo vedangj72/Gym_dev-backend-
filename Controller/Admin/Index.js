@@ -99,3 +99,8 @@ export const LoginAdmin=async(req,res)=>{
     }
 }
 
+
+
+// Methord : Post
+// EndPoints : /:id
+// Work: To get Admin data complete
