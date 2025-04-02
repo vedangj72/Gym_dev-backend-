@@ -15,7 +15,7 @@ export const createBranch = async (req, res) => {
         
         const {branch_name,location}= req.body
         const { admin_id } = req.params;
-        const BranchName= await BranchModel.findOne({branch_name})
+        const BranchName= await BranchModel.findOne({branch_name,admin_id})
 
         const admin=await AdminModel.findOne({admin_id})
 
@@ -65,3 +65,46 @@ export const createBranch = async (req, res) => {
             );
     }
 }
+
+
+
+// Methord : Get
+// EndPoints : /branch/:admin_id
+// Work: To Create new Admin (user) for the gym 
+
+
+export const getBranchesById=async(req,res)=>{
+    try {
+        // Validation of the id
+        const {admin_id}=req.params
+        const admin=await BranchModel.find({admin_id})
+
+        return res.status(StatusCodes.OK).send(
+            responseGenerator(
+                admin,
+                StatusCodes.OK,
+                "Fetched the branch data for the selected admin ",
+                "success"
+            )
+        )
+
+    } catch (error) {
+        if (error instanceof CustomError) {
+            return res
+                .status(StatusCodes.BAD_REQUEST)
+                .send(responseGenerator({}, StatusCodes.BAD_REQUEST, error.message, 0));
+        }
+        return res
+            .status(StatusCodes.INTERNAL_SERVER_ERROR)
+            .send(
+                responseGenerator(
+                    {},
+                    StatusCodes.INTERNAL_SERVER_ERROR,
+                    error.message || "Internal Server Error",
+                    0
+                )
+            );
+    }
+}
+
+

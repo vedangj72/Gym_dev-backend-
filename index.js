@@ -6,6 +6,7 @@ import logger from "./Utils/logger.js";
 import { mongooseConnection } from "./Utils/mongoDB_configuration.js";
 import adminRouter from "./Router/Admin.js";
 import profileRouter from "./Router/Profile.js";
+import equipmentRouter from "./Router/Equipment.js";
 
 const app = express();
 const port = process.env.PORT || 8080; 
@@ -25,6 +26,9 @@ app.get("/", (req, res) => {
 app.use("/api/v1/admin",adminRouter)
 
 app.use("/api/v1/branch",profileRouter)
+
+app.use("/api/v1/equipment",equipmentRouter)
+
 
 try {
   const db = await mongooseConnection();

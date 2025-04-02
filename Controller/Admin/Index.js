@@ -70,7 +70,7 @@ export const LoginAdmin=async(req,res)=>{
             throw new CustomError("Invalid email or password");
         }
 
-        const token = getJwt({ email: admin.email }, { expiresIn: '30d' });
+        const token = getJwt({ email: admin.email, id: admin._id }, { expiresIn: '30d' });
 
         return res.status(StatusCodes.OK).send(
             responseGenerator(
@@ -101,6 +101,101 @@ export const LoginAdmin=async(req,res)=>{
 
 
 
-// Methord : Post
-// EndPoints : /:id
-// Work: To get Admin data complete
+// Method: GET
+// Endpoint: /admin/:id
+// Work: Fetch admin details along with branch details using aggregation
+export const getAdminById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const admindata=req.admin
+        console.log(`this is admin data ${admindata._id}`)
+        // Aggregation pipeline to fetch admin details and corresponding branch data
+        const adminData = await AdminModel.aggregate([
+            { $match: { _id: id } }, 
+            {
+                $lookup: {
+                    from: "branches",
+                    localField: "branches",
+                    foreignField: "_id", 
+                    as: "branch_details"
+                }
+            },
+            {
+                $project: {
+                    password: 0 ,
+                    branches:0
+                }
+            }
+        ]);
+
+        if (!adminData || adminData.length === 0) {
+            throw new CustomError("Invalid admin ID");
+        }
+
+        return res
+            .status(StatusCodes.OK)
+            .send(responseGenerator(adminData[0], StatusCodes.OK, "Admin data retrieved successfully", 1));
+
+    } catch (error) {
+        if (error instanceof CustomError) {
+            return res
+                .status(StatusCodes.BAD_REQUEST)
+                .send(responseGenerator({}, StatusCodes.BAD_REQUEST, error.message, 0));
+        }
+        return res
+            .status(StatusCodes.INTERNAL_SERVER_ERROR)
+            .send(
+                responseGenerator(
+                    {},
+                    StatusCodes.INTERNAL_SERVER_ERROR,
+                    error.message || "Internal Server Error",
+                    0
+                )
+            );
+    }
+};
+
+
+
+// Method: GET
+// Endpoint: /admin
+// Work: get all the admins that are present in the application
+
+
+export const getAllAdmins=async(req,res)=>{
+    try {
+        const admins= await AdminModel.find()
+        return res.status(StatusCodes.OK).send(
+            responseGenerator(
+                admins,
+                StatusCodes.OK,
+                "All admins are here",
+                "success"
+            )
+        ) 
+         
+    }catch (error) {
+        if (error instanceof CustomError) {
+            return res
+                .status(StatusCodes.BAD_REQUEST)
+                .send(responseGenerator({}, StatusCodes.BAD_REQUEST, error.message, 0));
+        }
+        return res
+            .status(StatusCodes.INTERNAL_SERVER_ERROR)
+            .send(
+                responseGenerator(
+                    {},
+                    StatusCodes.INTERNAL_SERVER_ERROR,
+                    error.message || "Internal Server Error",
+                    0
+                )
+            );
+    }
+};
+
+/*
+TODO
+1. Put request for the admin user
+2. Delete Admin by the Super Admin that is me 
+3.testing purpose get all the admins  for the super admin that is me
+ */
