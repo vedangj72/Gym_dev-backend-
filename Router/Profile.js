@@ -5,10 +5,10 @@ import { verifyAdmin } from "../Middleware/auth.js";
 const profileRouter=Router()
 
 
-profileRouter.post("/:admin_id",verifyAdmin,createBranch);
+profileRouter.post("/",verifyAdmin,createBranch);
 
 
-profileRouter.get("/:admin_id",verifyAdmin,getBranchesById);
+profileRouter.get("/",verifyAdmin,getBranchesById);
 
 
 export default profileRouter    
