@@ -12,11 +12,15 @@ import EquipmentModel from "../../Models/EquipmentModel.js";
 export const createEquipments=async(req,res)=>{
     try {
         const {equipment_name, equipment_description,equipment_last_mantainance_date,}=req.body
-        const {admin_id}=req.params
+        const admin_id=req.admin?._id
         // branch id depending on the query if having multiple branches
-        const {branch}=req.query 
-        
+        let {branch}=req.query 
+
         const admin= await AdminModel.findOne({_id:admin_id})
+
+        if(!branch){
+            branch=admin.branches[0];
+        }
 
         if(!admin){
             throw new CustomError("Admin is missing ")
@@ -62,25 +66,29 @@ export const createEquipments=async(req,res)=>{
 // EndPoints : /Equipment/:admin_id
 // Work: To Create new Equipment (user) for the gym
 
-export const getEquipmentById=async(req,res)=>{
+export const getEquipmentById = async (req, res) => {
     try {
-        const {admin_id}=req.params
-        const {branch}=req.query
+        const admin_id = req.admin?._id;
+        let { branch } = req.query;
 
-        const admin= await EquipmentModel.find({admin_id,branch_id:branch})
-
-        if(!admin){
-            throw new CustomError("Missing the admin data")
+        // If no branch is provided, set default to "Main"
+        if (!branch) {
+            const admin = await AdminModel.findOne({ _id: admin_id });
+            if (!admin) throw new CustomError("Admin not found");
+            branch = admin.branches[0];
         }
+
+        // Fetch all equipment matching admin_id and branch_id
+        const equipmentList = await EquipmentModel.find({ admin_id, branch_id: branch });
 
         return res.status(StatusCodes.OK).send(
             responseGenerator(
-                admin,
+                equipmentList,
                 StatusCodes.OK,
                 "Here is the list of the equipment that you have",
-                "Success"
+                "success"
             )
-        )
+        );
     } catch (error) {
         if (error instanceof CustomError) {
             return res
@@ -98,4 +106,4 @@ export const getEquipmentById=async(req,res)=>{
                 )
             );
     }
-}
+};

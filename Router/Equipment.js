@@ -5,9 +5,9 @@ import { verifyAdmin } from "../Middleware/auth.js";
 
 const equipmentRouter=Router()
 
-equipmentRouter.post("/:admin_id",verifyAdmin,createEquipments)
+equipmentRouter.post("/",verifyAdmin,createEquipments)
 
-equipmentRouter.get("/:admin_id",verifyAdmin,getEquipmentById)
+equipmentRouter.get("/",verifyAdmin,getEquipmentById)
 
 
 export default equipmentRouter

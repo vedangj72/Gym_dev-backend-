@@ -4,43 +4,63 @@ import { CustomError } from "../../Utils/error.js"
 import bcrypt from "bcrypt";
 import { getJwt } from "../../Utils/jwt.js";
 import { responseGenerator } from "../../Utils/general.js";
+import BranchModel from "../../Models/BranchesModel.js";
 
 // Methord : Post
 // EndPoints : /signup
 // Work: To Create new Admin (user) for the gym
-export const signUpAdmin=async(req,res)=>{
+
+export const signUpAdmin = async (req, res) => {
     try {
-        const {phone,name,gym_name,email,password,age,address}=req.body
-        const Existed= await AdminModel.findOne({email})
-        if(Existed){
-            throw new CustomError("The Email that you entered already exist")
+        const { phone, name, gym_name, email, password, age, address, branch_name, branch_location } = req.body;
+
+        const existed = await AdminModel.findOne({ email });
+        if (existed) {
+            throw new CustomError("The email that you entered already exists");
         }
-       
+
+        // Hash password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        const newAdmin=await AdminModel.create({
+        // Create new Admin
+        const newAdmin = await AdminModel.create({
             phone,
             name,
             gym_name,
             email,
-            password: hashedPassword, 
+            password: hashedPassword,
             age,
-            address
-        })
-        return res
-        .status(StatusCodes.CREATED)
-        .send(responseGenerator(newAdmin, StatusCodes.CREATED, "Admin registered successfully", 1));
+            address,
+            branches: [] 
+        });
+
+        const newBranch = await BranchModel.create({
+            branch_name: branch_name || "Main",
+            branch_location: branch_location || address,
+            admin_id: newAdmin._id
+        });
+
+        // Update the Admin model with the created branch
+        newAdmin.branches.push(newBranch._id);
+        await newAdmin.save();
+
+        return res.status(StatusCodes.CREATED).send(
+            responseGenerator(
+                newAdmin,
+                StatusCodes.CREATED,
+                "Admin registered successfully with branch",
+                1
+            )
+        );
 
     } catch (error) {
-        if(error instanceof CustomError){
+        if (error instanceof CustomError) {
             return res
                 .status(StatusCodes.BAD_REQUEST)
                 .send(responseGenerator({}, StatusCodes.BAD_REQUEST, error.message, 0));
         }
-        return res
-        .status(StatusCodes.INTERNAL_SERVER_ERROR)
-        .send(
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send(
             responseGenerator(
                 {},
                 StatusCodes.INTERNAL_SERVER_ERROR,
@@ -49,8 +69,7 @@ export const signUpAdmin=async(req,res)=>{
             )
         );
     }
-}
-
+};
 
 
 // Methord : Post
@@ -106,12 +125,12 @@ export const LoginAdmin=async(req,res)=>{
 // Work: Fetch admin details along with branch details using aggregation
 export const getAdminById = async (req, res) => {
     try {
-        const { id } = req.params;
+        // const { id } = req.params;
         const admindata=req.admin
         console.log(`this is admin data ${admindata._id}`)
         // Aggregation pipeline to fetch admin details and corresponding branch data
         const adminData = await AdminModel.aggregate([
-            { $match: { _id: id } }, 
+            { $match: { _id: req.admin._id } }, 
             {
                 $lookup: {
                     from: "branches",

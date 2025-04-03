@@ -11,7 +11,7 @@ adminRouter.post("/login",LoginAdmin)
 
 
 // Private route for the admin data
-adminRouter.get("/:id",verifyAdmin,getAdminById)
+adminRouter.get("/",verifyAdmin,getAdminById)
 
 // testing purpose data for loading the admin data to hold the id 
 adminRouter.get("/",verifyAdmin,getAllAdmins)
