@@ -3,7 +3,6 @@ import { CustomError } from "../../Utils/error.js";
 import { StatusCodes } from "http-status-codes";
 import { responseGenerator } from "../../Utils/general.js";
 import AdminModel from "../../Models/AdminModels.js";
-import Logger, { createLogger } from "bunyan";
 
 
 
@@ -15,8 +14,9 @@ export const createBranch = async (req, res) => {
     try {
         
         const {branch_name,location}= req.body
-        const admin_id=req.admin?._id
+        const { admin_id } = req.params;
         const BranchName= await BranchModel.findOne({branch_name,admin_id})
+
         const admin=await AdminModel.findOne({admin_id})
 
 
@@ -72,17 +72,13 @@ export const createBranch = async (req, res) => {
 // EndPoints : /branch/:admin_id
 // Work: To Create new Admin (user) for the gym 
 
+
 export const getBranchesById=async(req,res)=>{
     try {
         // Validation of the id
-        const admin_id = req.admin?._id;
-        
+        const {admin_id}=req.params
         const admin=await BranchModel.find({admin_id})
-        if(!admin){
-            throw new CustomError("Please enter valid admin id ")
-        }
 
-        console.log(`The admin id is ${req.admin._id}`);
         return res.status(StatusCodes.OK).send(
             responseGenerator(
                 admin,
